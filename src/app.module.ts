@@ -7,6 +7,7 @@ import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import * as process from 'process';
+import mongoose from 'mongoose';
 
 @Module({
   imports: [
@@ -15,10 +16,12 @@ import * as process from 'process';
     CatsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, CatsService],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
+  private readonly idDev: boolean = process.env.MODE === 'dev' ? true : false;
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
+    mongoose.set('debug', this.idDev);
   }
 }

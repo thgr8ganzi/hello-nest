@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { CatsService } from './cats/cats.service';
 
@@ -8,9 +8,4 @@ export class AppController {
     private readonly appService: AppService,
     private readonly catsService: CatsService,
   ) {}
-
-  @Get()
-  getHello(): string {
-    return this.catsService.hiCatServiceProduct();
-  }
 }
