@@ -24,4 +24,9 @@ export class CatsRepository {
   async findCatByEmail(email: any) {
     return await this.catModel.findOne({ email });
   }
+
+  async findCatByIdWithoutPassword(catId: string) {
+    const cat = await this.catModel.findById(catId).select('-password');
+    return cat;
+  }
 }
