@@ -1,32 +1,56 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Comments } from '../comments/comments.schema';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { Cat } from './cats.schema';
-import { Model } from 'mongoose';
 import { CatRequestDto } from './dto/cats.request.dto';
 
 @Injectable()
 export class CatsRepository {
-  constructor(@InjectModel(Cat.name) private readonly catModel: Model<Cat>) {}
+  constructor(
+    @InjectModel(Cat.name) private readonly catModel: Model<Cat>,
+    // 해당 라인 추가, 참고로 강의에선 Comments 인데 저는 Cat과 같이 단수형으로 만들어서 Comment 입니다.
+    @InjectModel(Comments.name) private readonly commentModel: Model<Comments>,
+  ) {}
+
+  async findAll() {
+    const result = await this.catModel
+      .find()
+      // populate 파라미터 변경
+      .populate({ path: 'comments', model: this.commentModel });
+
+    return result;
+  }
+
+  async findByIdAndUpdateImg(id: string, fileName: string) {
+    const cat = await this.catModel.findById(id);
+
+    cat.imgUrl = `http://localhost:8000/media/${fileName}`;
+
+    const newCat = await cat.save();
+
+    console.log(newCat);
+    return newCat.readOnlyData;
+  }
+
+  async findCatByIdWithoutPassword(
+    catId: string | Types.ObjectId,
+  ): Promise<Cat | null> {
+    const cat = await this.catModel.findById(catId).select('-password');
+    return cat;
+  }
+
+  async findCatByEmail(email: string): Promise<Cat | null> {
+    const cat = await this.catModel.findOne({ email });
+    return cat;
+  }
 
   async existsByEmail(email: string): Promise<boolean> {
-    try {
-      const result = await this.catModel.exists({ email });
-      return !!result;
-    } catch (error) {
-      throw new HttpException('db error', 400);
-    }
+    const result = await this.catModel.exists({ email });
+    return !!result;
   }
 
   async create(cat: CatRequestDto): Promise<Cat> {
     return await this.catModel.create(cat);
-  }
-
-  async findCatByEmail(email: any) {
-    return await this.catModel.findOne({ email });
-  }
-
-  async findCatByIdWithoutPassword(catId: string) {
-    const cat = await this.catModel.findById(catId).select('-password');
-    return cat;
   }
 }
